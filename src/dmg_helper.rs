@@ -1,5 +1,5 @@
 use std::process::Command;
-use std::env::home_dir;
+use home::home_dir;
 use std::path::Path;
 
 static TMP_MNT: &str = ".acai/temp/mount";

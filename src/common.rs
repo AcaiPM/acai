@@ -1,5 +1,5 @@
 use uname::{Info, uname};
-use os_version::{MacOS, detect};
+use os_version::MacOS;
 
 pub fn to_val(input: (i32, String)) -> i32 {
     return input.0;
