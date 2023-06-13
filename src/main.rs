@@ -4,6 +4,11 @@ use spinners::{Spinner, Spinners};
 use std::thread::sleep;
 use std::time::Duration;
 
+pub mod dmg_helper;
+pub mod common;
+pub mod install;
+pub mod seed;
+
 fn cli() -> Command {
     Command::new("acai")
         .about("Fast package manager for macOS apps")
@@ -30,8 +35,23 @@ fn main() {
             let mut sp = Spinner::new(Spinners::Dots, text.into());
             sleep(Duration::from_secs(3));
             sp.stop();
+            println!(""); // idk newline or something lol
         }
 
         _ => unreachable!(),
     }
+
+
+    // for testing purposes below !!
+    let path_to_app = dmg_helper::get_app_path("~/Downloads/googlechrome.dmg", "Google Chrome.app");
+    println!("{}", common::to_str(path_to_app));
+
+    let chrome_seed = seed::load_seed("data/seeds/google-chrome.json");
+    println!("{:?}", chrome_seed.downloads);
+
+    let arch = common::architecture();
+    println!("{}", common::to_str(arch));
+
+    let os = common::macos_version();
+    println!("{}", common::to_str(os));
 }

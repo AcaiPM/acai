@@ -5,10 +5,13 @@
     "app_name": "Google Chrome.app",
     "app_version": "114.0.5735.106",
     "min_os": "10.13",
+
     "downloads": {
         "arm64": "https://dl.google.com/chrome/arm64/universal/stable/GGRO/googlechrome.dmg",
-        "amd64": "https://dl.google.com/chrome/amd64/universal/stable/GGRO/googlechrome.dmg"
+        "amd64": "https://dl.google.com/chrome/amd64/universal/stable/GGRO/googlechrome.dmg",
+        "universal": "https://dl.google.com/chrome/amd64/universal/stable/GGRO/googlechrome.dmg"
     },
+
     "uninstall": {
         "files": [
             "/Library/Caches/com.google.SoftwareUpdate.*",
@@ -43,6 +46,8 @@
         "launchctl": [
             "com.google.keystone.agent",
             "com.google.keystone.daemon"
+        ],
+        "other": [
         ]
     }
 }

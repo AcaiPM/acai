@@ -1,0 +1,30 @@
+use std::process::Command;
+use std::path::Path;
+
+// need use something built in later
+fn copy(src: &str, dest: &str) {
+    let args = ["-a", src, dest];
+    
+    let copy = Command::new("cp")
+                    .env("PATH", "/bin")
+                    .args(&args)
+                    .output()
+                    .expect("Failed to execute cp");
+                    
+    assert!(copy.status.success());
+}
+
+pub fn install_app(app_path: &str, app_name: &str) -> (i32, String) {
+    let install_path = format!("{}/{}", "/Applications", app_name);
+
+    if Path::new(&install_path).exists() {
+        return (-1, "Application already installed.".to_string())
+    }
+
+    if !Path::new(&app_path).exists() {
+        return (-1, "Unable to find application path.".to_string())
+    }
+
+    copy(&app_path, &install_path); // need add checks after copy
+    return (0, install_path)
+}
