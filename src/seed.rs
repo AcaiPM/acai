@@ -47,10 +47,6 @@ pub struct Downloads {
     /// Architecture amd64 (Intel, AMD (if hackintosh), etc)
     #[serde(rename = "amd64")]
     pub amd64: String,
-
-    /// Fat Binary, runs on both architectures
-    #[serde(rename = "universal")]
-    pub universal: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

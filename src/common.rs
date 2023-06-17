@@ -35,8 +35,17 @@ pub fn macos_version() -> (i32, String) {
 }
 
 pub fn get_download_url(seed: &Seed) -> String {
-    return seed
-        .downloads
-        .universal
-        .replace("#{version}", &seed.app_version);
+    let arch = architecture();
+
+    if arch.1 == "arm64" {
+        return seed
+            .downloads
+            .arm64
+            .replace("#{version}", &seed.app_version);
+    } else {
+        return seed
+            .downloads
+            .amd64
+            .replace("#{version}", &seed.app_version);
+    }
 }
