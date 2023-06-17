@@ -4,7 +4,7 @@ use dmg_helper::temp_dir;
 use spinners::{Spinner, Spinners};
 use std::fs::remove_file;
 use std::path::Path;
-use std::process::exit;
+use std::process::ExitCode;
 
 use crate::seed::{load_seed, Seed};
 
@@ -27,7 +27,7 @@ fn cli() -> Command {
         )
 }
 
-fn main() -> Result<(), ureq::Error> {
+fn main() -> Result<ExitCode, ureq::Error> {
     let matches = cli().get_matches();
 
     match matches.subcommand() {
@@ -49,7 +49,7 @@ fn main() -> Result<(), ureq::Error> {
                     "\x1b[32m✖\x1b[0m",
                     "The application is already installed".into(),
                 );
-                exit(1);
+                return Ok(ExitCode::FAILURE);
             } else {
                 sp.stop_and_persist("\x1b[32m✔\x1b[0m", "Seed is ready".into());
             }
@@ -57,7 +57,6 @@ fn main() -> Result<(), ureq::Error> {
 
             // Install seed
             let mut sp = Spinner::new(Spinners::Dots, format!("Installing {}", seed.name));
-            // let arch = common::architecture();
             dmg_helper::download_dmg(&common::get_download_url(&seed));
             let path_to_app = dmg_helper::get_app_path(
                 &format!("{}/app.dmg", dmg_helper::temp_dir()),
@@ -69,7 +68,7 @@ fn main() -> Result<(), ureq::Error> {
                     "\x1b[32m✖\x1b[0m",
                     format!("Failed to install {}: {}", seed.name, ret.1),
                 );
-                exit(ret.0);
+                return Ok(ExitCode::FAILURE);
             } else {
                 sp.stop_and_persist("\x1b[32m✔\x1b[0m", format!("Installed {}", seed.name));
                 install::xattr(&format!("/Applications/{}", seed.app_name));
@@ -87,5 +86,5 @@ fn main() -> Result<(), ureq::Error> {
         Err(_) => (),
     }
     sp.stop_and_persist("\x1b[32m✔\x1b[0m", "Done!".into());
-    exit(0);
+    return Ok(ExitCode::SUCCESS);
 }
