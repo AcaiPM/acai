@@ -1,5 +1,3 @@
-use clap::{arg, Command};
-
 use dmg_helper::temp_dir;
 use spinners::{Spinner, Spinners};
 use std::fs::remove_file;
@@ -8,32 +6,14 @@ use std::process::ExitCode;
 
 use crate::seed::{load_seed, Seed};
 
+pub mod cli;
 pub mod common;
 pub mod dmg_helper;
 pub mod install;
 pub mod seed;
 
-fn cli() -> Command {
-    Command::new("acai")
-        .about("Fast package manager for macOS apps")
-        .subcommand_required(true)
-        .arg_required_else_help(true)
-        .allow_external_subcommands(true)
-        .subcommand(
-            Command::new("install")
-                .about("Installs packages")
-                .arg(arg!(<PACKAGE> "Package to install"))
-                .arg_required_else_help(true),
-        )
-        .subcommand(
-            Command::new("search")
-                .about("Searches seeds")
-                .arg(arg!(<QUERY> "Search query").required(false)),
-        )
-}
-
 fn main() -> Result<ExitCode, ureq::Error> {
-    let matches = cli().get_matches();
+    let matches = cli::cli().get_matches();
 
     match matches.subcommand() {
         Some(("install", sub_matches)) => {
