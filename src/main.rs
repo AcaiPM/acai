@@ -1,11 +1,15 @@
 use clap::{arg, Command};
 
+use dmg_helper::temp_dir;
 use spinners::{Spinner, Spinners};
-use std::thread::sleep;
-use std::time::Duration;
+use std::fs::remove_file;
+use std::path::Path;
+use std::process::exit;
 
-pub mod dmg_helper;
+use crate::seed::{load_seed, Seed};
+
 pub mod common;
+pub mod dmg_helper;
 pub mod install;
 pub mod seed;
 
@@ -23,35 +27,65 @@ fn cli() -> Command {
         )
 }
 
-fn main() {
+fn main() -> Result<(), ureq::Error> {
     let matches = cli().get_matches();
 
     match matches.subcommand() {
         Some(("install", sub_matches)) => {
-            let mut text: String = "Installing ".to_owned();
-            let text2: &str = sub_matches.get_one::<String>("PACKAGE").expect("required");
-            text.push_str(text2);
+            let input: &str = sub_matches.get_one::<String>("PACKAGE").expect("required");
 
-            let mut sp = Spinner::new(Spinners::Dots, text.into());
-            sleep(Duration::from_secs(3));
-            sp.stop();
-            println!(""); // idk newline or something lol
+            // Get and load seed
+            let mut sp = Spinner::new(Spinners::Dots, "Fetching seed".into());
+            let body: String = ureq::get(&format!("http://0.0.0.0:3000/seed?id={input}"))
+                .call()?
+                .into_string()?;
+            let seed: Seed = load_seed(&body);
+            sp.stop_and_persist("\x1b[32m✔\x1b[0m", "Fetched seed".into());
+
+            // Seed compatibility check
+            let mut sp = Spinner::new(Spinners::Dots, "Checking seed".into());
+            if Path::new(&format!("/Applications/{}", seed.app_name)).exists() {
+                sp.stop_and_persist(
+                    "\x1b[32m✖\x1b[0m",
+                    "The application is already installed".into(),
+                );
+                exit(1);
+            } else {
+                sp.stop_and_persist("\x1b[32m✔\x1b[0m", "Seed is ready".into());
+            }
+            // let os = common::macos_version(); // TODO: Check if macOS version is compatible
+
+            // Install seed
+            let mut sp = Spinner::new(Spinners::Dots, format!("Installing {}", seed.name));
+            // let arch = common::architecture();
+            dmg_helper::download_dmg(&common::get_download_url(&seed));
+            let path_to_app = dmg_helper::get_app_path(
+                &format!("{}/app.dmg", dmg_helper::temp_dir()),
+                &seed.app_name,
+            );
+            let ret = install::install_app(&path_to_app.1, &seed.app_name);
+            if ret.0 != 0 {
+                sp.stop_and_persist(
+                    "\x1b[32m✖\x1b[0m",
+                    format!("Failed to install {}: {}", seed.name, ret.1),
+                );
+                exit(ret.0);
+            } else {
+                sp.stop_and_persist("\x1b[32m✔\x1b[0m", format!("Installed {}", seed.name));
+                install::xattr(&format!("/Applications/{}", seed.app_name));
+            }
         }
 
         _ => unreachable!(),
     }
 
-
-    // for testing purposes below !!
-    let path_to_app = dmg_helper::get_app_path("~/Downloads/googlechrome.dmg", "Google Chrome.app");
-    println!("{}", common::to_str(path_to_app));
-
-    let chrome_seed = seed::load_seed("data/seeds/google-chrome.json");
-    println!("{:?}", chrome_seed.downloads);
-
-    let arch = common::architecture();
-    println!("{}", common::to_str(arch));
-
-    let os = common::macos_version();
-    println!("{}", common::to_str(os));
+    // Clean up
+    let mut sp = Spinner::new(Spinners::Dots, "Cleaning up".into());
+    dmg_helper::detach(&dmg_helper::mount_dir());
+    match remove_file(format!("{}/app.dmg", temp_dir())) {
+        Ok(()) => (),
+        Err(_) => (),
+    }
+    sp.stop_and_persist("\x1b[32m✔\x1b[0m", "Done!".into());
+    exit(0);
 }

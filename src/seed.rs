@@ -1,4 +1,3 @@
-use std::fs;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -20,7 +19,7 @@ pub struct Seed {
     // The '.app' name
     #[serde(rename = "app_name")]
     pub app_name: String,
-    
+
     /// Application Version
     #[serde(rename = "app_version")]
     pub app_version: String,
@@ -41,7 +40,6 @@ pub struct Seed {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct Downloads {
-
     /// Architecture arm64 (M1, M2, Etc)
     #[serde(rename = "arm64")]
     pub arm64: String,
@@ -58,7 +56,6 @@ pub struct Downloads {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct Uninstall {
-
     /// Files to remove
     #[serde(rename = "files")]
     pub files: Vec<String>,
@@ -76,12 +73,8 @@ pub struct Uninstall {
     pub other: Vec<String>,
 }
 
-pub fn load_seed(seed_path: &str) -> Seed {
-    let seed = fs::File::open(seed_path)
-        .expect("Unable to open seed file");
-
-    let seed_decode: Seed = serde_json::from_reader(seed)
-        .expect("Invalid seed file.");
+pub fn load_seed(seed: &str) -> Seed {
+    let seed_decode: Seed = serde_json::from_str(seed).expect("Invalid seed file.");
 
     return seed_decode;
 }
