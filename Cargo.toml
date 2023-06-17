@@ -1,9 +1,12 @@
 [package]
 name = "acai"
+description = "Fast package manager for macOS apps"
 version = "1.0.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+keywords = ["cli", "macos", "packages"]
+authors = ["Nebula <me@itsnebula.net>"]
+homepage = "https://github.com/AcaiPM/acai"
+repository = "https://github.com/AcaiPM/acai"
 
 [dependencies]
 clap = { version = "4.3.3", features = ["derive"] }
