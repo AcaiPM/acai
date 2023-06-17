@@ -69,6 +69,14 @@ pub struct Uninstall {
     pub other: Vec<String>,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "PascalCase")]
+pub struct Search {
+    /// Array with search results
+    #[serde(rename = "seeds")]
+    pub seeds: Vec<String>,
+}
+
 pub fn load_seed(seed: &str) -> Seed {
     let seed_decode: Seed = serde_json::from_str(seed).expect("Invalid seed file.");
 

@@ -22,8 +22,13 @@ fn cli() -> Command {
         .subcommand(
             Command::new("install")
                 .about("Installs packages")
-                .arg(arg!(<PACKAGE> "The package to install"))
+                .arg(arg!(<PACKAGE> "Package to install"))
                 .arg_required_else_help(true),
+        )
+        .subcommand(
+            Command::new("search")
+                .about("Searches seeds")
+                .arg(arg!(<QUERY> "Search query").required(false)),
         )
 }
 
@@ -73,18 +78,46 @@ fn main() -> Result<ExitCode, ureq::Error> {
                 sp.stop_and_persist("\x1b[32m✔\x1b[0m", format!("Installed {}", seed.name));
                 install::xattr(&format!("/Applications/{}", seed.app_name));
             }
+
+            // Clean up
+            let mut sp = Spinner::new(Spinners::Dots, "Cleaning up".into());
+            dmg_helper::detach(&dmg_helper::mount_dir());
+            match remove_file(format!("{}/app.dmg", temp_dir())) {
+                Ok(()) => (),
+                Err(_) => (),
+            }
+            sp.stop_and_persist("\x1b[32m✔\x1b[0m", "Done!".into());
+        }
+
+        Some(("search", sub_matches)) => {
+            if sub_matches.get_one::<String>("QUERY").is_some() {
+                let input: &str = sub_matches.get_one::<String>("QUERY").expect("required");
+                let body: String = ureq::get(&format!("http://0.0.0.0:3000/search?id={input}"))
+                    .call()?
+                    .into_string()?;
+
+                println!("\x1b[01m\x1b[04mSearch results:\x1b[0m");
+                let v: seed::Search = serde_json::from_str(&body).unwrap();
+                let seeds = v.seeds;
+                for seed in seeds {
+                    println!("{}", seed);
+                }
+            } else {
+                let body: String = ureq::get(&format!("http://0.0.0.0:3000/search"))
+                    .call()?
+                    .into_string()?;
+
+                println!("\x1b[01m\x1b[04mAvailable seeds:\x1b[0m");
+                let v: seed::Search = serde_json::from_str(&body).unwrap();
+                let seeds = v.seeds;
+                for seed in seeds {
+                    println!("{}", seed);
+                }
+            }
         }
 
         _ => unreachable!(),
     }
 
-    // Clean up
-    let mut sp = Spinner::new(Spinners::Dots, "Cleaning up".into());
-    dmg_helper::detach(&dmg_helper::mount_dir());
-    match remove_file(format!("{}/app.dmg", temp_dir())) {
-        Ok(()) => (),
-        Err(_) => (),
-    }
-    sp.stop_and_persist("\x1b[32m✔\x1b[0m", "Done!".into());
     return Ok(ExitCode::SUCCESS);
 }
